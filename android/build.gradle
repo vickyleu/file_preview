@@ -2,17 +2,17 @@ group 'com.gstory.file_preview'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.6.10'
+    ext.kotlin_version = '1.9.22'
     repositories {
         google()
         mavenCentral()
         flatDir {
-            dirs project(':file_preview').file('libs')
+            dirs project.file('libs')
         }
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.2'
+        classpath 'com.android.tools.build:gradle:8.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -21,9 +21,7 @@ rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
-        flatDir {
-            dirs project(':file_preview').file('libs')
-        }
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
     }
 }
 
@@ -31,8 +29,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 30
-
+    compileSdk 33
+    namespace 'com.gstory.file_preview'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -51,14 +49,11 @@ android {
     }
 }
 
-repositories {
-    flatDir {
-        dirs 'libs'
-    }
-}
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation(name: 'TbsFileSdk_base_armeabi_release_1.0.5.6000020.20230710103548', ext: 'aar')
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    compileOnly(fileTree(dir: 'libs', include: ['*.aar']))
+    compileOnly "io.flutter:flutter_embedding_debug:1.0.0-c08d7d5efc9aa6eb3c30cfb3be6dc09bca5e7631"
 //    implementation files('libs/TbsFileSdk_1.0.5.aar')
 }

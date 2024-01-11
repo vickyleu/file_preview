@@ -13,11 +13,15 @@ import io.flutter.plugin.platform.PlatformViewFactory
  * @Description: 描述
  */
 
-internal class FilePreviewFactory (private val messenger: BinaryMessenger, private val activity: Activity) : PlatformViewFactory(
-        StandardMessageCodec.INSTANCE) {
+internal class FilePreviewFactory(
+    private val messenger: BinaryMessenger,
+    private val activity: Activity
+) : PlatformViewFactory(
+    StandardMessageCodec.INSTANCE
+) {
 
     override fun create(context: Context?, viewId: Int, args: Any?): PlatformView {
         val params = args as Map<String?, Any?>
-        return FilePreview(activity,messenger, viewId, params)
+        return FilePreview(activity, messenger, viewId, params)
     }
 }

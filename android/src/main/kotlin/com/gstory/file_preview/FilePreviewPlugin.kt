@@ -12,7 +12,6 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.MethodChannel.Result
 
 
 /** FilePreviewPlugin */
@@ -26,8 +25,8 @@ class FilePreviewPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         mActivity = binding.activity
         mFlutterPluginBinding?.platformViewRegistry?.registerViewFactory(
-                "com.gstory.file_preview/filePreview",
-                FilePreviewFactory(mFlutterPluginBinding?.binaryMessenger!!, mActivity!!)
+            "com.gstory.file_preview/filePreview",
+            FilePreviewFactory(mFlutterPluginBinding?.binaryMessenger!!, mActivity!!)
         )
 
     }
@@ -54,7 +53,7 @@ class FilePreviewPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         mFlutterPluginBinding = flutterPluginBinding
     }
 
-    override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+    override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: MethodChannel.Result) {
         if (call.method == "initTBS") {
             val license = call.argument<String>("license")
             TbsFileInterfaceImpl.setLicenseKey(license)
@@ -62,7 +61,7 @@ class FilePreviewPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             var isInit = TbsFileInterfaceImpl.initEngine(applicationContext)
             Log.d("=====>", "初始化 $isInit")
             result.success(isInit == 0)
-        }else if(call.method == "tbsHasInit"){
+        } else if (call.method == "tbsHasInit") {
             val ret = TbsFileInterfaceImpl.initEngine(applicationContext)
             result.success(ret == 0)
         } else if (call.method == "tbsVersion") {
@@ -78,4 +77,5 @@ class FilePreviewPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
     }
+
 }

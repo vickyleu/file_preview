@@ -2,6 +2,7 @@ package com.gstory.file_preview
 
 import android.app.Activity
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
@@ -11,12 +12,11 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import com.example.flutter_pangrowth.utils.UIUtils
+import androidx.core.app.ActivityCompat
+import com.gstory.file_preview.utils.UIUtils
 import com.gstory.file_preview.utils.FileUtils
 import com.tencent.tbs.reader.ITbsReader
-import com.tencent.tbs.reader.ITbsReaderCallback
 import com.tencent.tbs.reader.TbsFileInterfaceImpl
-import com.tencent.tbs.reader.TbsReaderView
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -66,17 +66,32 @@ internal class FilePreview(
         //tbs只能加载本地文件 如果是网络文件则先下载
         if (filePath.startsWith("http")) {
             //进度条
-            var progressBar = ProgressBar(activity)
-            progressBar.indeterminateDrawable = activity.resources.getDrawable(R.drawable.progressbar_style)
-            mContainer.addView(progressBar)
-            //文字
-            var mRateText = TextView(activity)
-            mRateText.layoutParams?.width = ViewGroup.LayoutParams.WRAP_CONTENT
-            mRateText.layoutParams?.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            val progressBar = ProgressBar(activity)
+            progressBar.setBackgroundColor(Color.RED)
+            Log.wtf("progressBar", "http")
+            try {
+                progressBar.indeterminateDrawable =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        activity.getDrawable(R.drawable.progressbar_style)
+                    } else {
+                        activity.resources.getDrawable(R.drawable.progressbar_style)
+                    }
+                mContainer.addView(progressBar)
+            } catch (e: Exception) {
+            }
+            val mRateText = TextView(activity)
+            try {
+                //文字
+                mRateText.layoutParams?.width = ViewGroup.LayoutParams.WRAP_CONTENT
+                mRateText.layoutParams?.height = ViewGroup.LayoutParams.WRAP_CONTENT
                 mRateText.gravity = Gravity.CENTER
-            mRateText.setTextColor(Color.parseColor("#cccccc"))
-            mRateText.textSize = 12f
-            mContainer.addView(mRateText)
+                mRateText.setTextColor(Color.parseColor("#cccccc"))
+                mRateText.textSize = 12f
+                mContainer.addView(mRateText)
+            } catch (e: Exception) {
+            }
+
+
             FileUtils.downLoadFile(activity, filePath, object : FileUtils.DownloadCallback {
                 override fun onProgress(progress: Int) {
 //                    Log.e(TAG, "文件下载进度$progress")
@@ -129,30 +144,44 @@ internal class FilePreview(
                 }
             }
             //文件格式
-            var fileExt = FileUtils.getFileType(file.toString())
+            val fileExt = FileUtils.getFileType(file.toString())
             val bool = TbsFileInterfaceImpl.canOpenFileExt(fileExt)
             Log.d(TAG, "文件是否支持$bool  文件路径：$file $bsReaderTemp $fileExt")
             if (bool) {
+                val state = ActivityCompat.checkSelfPermission(activity,"android.permission.WRITE_SETTINGS")
+                Log.wtf("state","$state")
+                // 0 代表没有权限 1 代表有权限
+                if(state == 0){
+                    ActivityCompat.requestPermissions(activity, arrayOf("android.permission.WRITE_SETTINGS"), 1)
+                    return
+                }
+                TbsFileInterfaceImpl.cleanAllFileRecord(activity);
                 //加载文件
                 val localBundle = Bundle()
-                localBundle.putString("filePath", file.toString())
+                localBundle.putString("filePath", file.absolutePath.toString())
                 localBundle.putString("tempPath", bsReaderTemp)
                 localBundle.putString("fileExt", fileExt)
-                localBundle.putString("set_content_view_height", "$height")
-                var ret = TbsFileInterfaceImpl.getInstance().openFileReader(activity,localBundle,object :ITbsReaderCallback{
-                    override fun onCallBackAction(p0: Int?, p1: Any?, p2: Any?) {
-                        Log.e(TAG, "文件打开回调 $p0  $p1  $p2")
-                        if (p1 is Bundle) {
-                            val id = p1.getInt("typeId")
+                localBundle.putInt("set_content_view_height", height.toInt())
+                val ret = TbsFileInterfaceImpl.getInstance().openFileReader(activity, localBundle,
+                    { code, args, msg ->
+                        Log.e(TAG, "文件打开回调 $code  $args  $msg")
+                        when(code){
+                            ITbsReader.NOTIFY_CANDISPLAY->{
+                                //文件即将显示
+                                Log.wtf("NOTIFY_CANDISPLAY","文件即将显示")
+                            }
+                        }
+                        if (args is Bundle) {
+                            val id = args.getInt("typeId", 0)
                             if (ITbsReader.TBS_READER_TYPE_STATUS_UI_SHUTDOWN == id) {
                                 //加密文档弹框取消需关闭activity
                             }
                         }
-                    }
-                },mContainer)
-                if(ret == 0){
+                    }, mContainer
+                )
+                if (ret == 0) {
                     channel?.invokeMethod("onShow", null)
-                }else{
+                } else {
                     var map: MutableMap<String, Any?> =
                         mutableMapOf("code" to ret, "msg" to "error:$ret")
                     channel?.invokeMethod("onFail", map)
@@ -165,7 +194,8 @@ internal class FilePreview(
             }
         } else {
             Log.e(TAG, "文件路径无效！")
-            var map: MutableMap<String, Any?> = mutableMapOf("code" to 1003, "msg" to "本地文件路径无效")
+            var map: MutableMap<String, Any?> =
+                mutableMapOf("code" to 1003, "msg" to "本地文件路径无效")
             channel?.invokeMethod("onFail", map)
         }
     }

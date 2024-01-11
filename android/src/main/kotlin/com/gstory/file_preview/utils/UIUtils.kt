@@ -1,4 +1,4 @@
-package com.example.flutter_pangrowth.utils
+package com.gstory.file_preview.utils
 
 import android.app.Activity
 import android.content.Context
@@ -85,9 +85,14 @@ object UIUtils {
     //获取状态栏高度
     fun getStatusBarHeight(context: Context): Float {
         var height = 0f
-        val resourceId = context.applicationContext.resources.getIdentifier("status_bar_height", "dimen", "android")
+        val resourceId = context.applicationContext.resources.getIdentifier(
+            "status_bar_height",
+            "dimen",
+            "android"
+        )
         if (resourceId > 0) {
-            height = context.applicationContext.resources.getDimensionPixelSize(resourceId).toFloat()
+            height =
+                context.applicationContext.resources.getDimensionPixelSize(resourceId).toFloat()
         }
         return height
     }
@@ -114,8 +119,12 @@ object UIUtils {
      * @return
      */
     fun hasNotchScreen(activity: Activity): Boolean {
-        return if (getInt("ro.miui.notch", activity) == 1 || hasNotchAtHuawei(activity) || hasNotchAtOPPO(activity)
-            || hasNotchAtVivo(activity) || isAndroidPHasNotch(activity)) {
+        return if (getInt(
+                "ro.miui.notch",
+                activity
+            ) == 1 || hasNotchAtHuawei(activity) || hasNotchAtOPPO(activity)
+            || hasNotchAtVivo(activity) || isAndroidPHasNotch(activity)
+        ) {
             true
         } else false
     }

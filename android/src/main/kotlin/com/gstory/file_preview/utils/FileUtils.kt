@@ -64,8 +64,8 @@ object FileUtils {
      * 下载文件
      */
     fun downLoadFile(context: Context, downloadUrl: String, callback: DownloadCallback) {
-        var saveFile : File? = null
-        Log.e("saveFile===+>","$downloadUrl")
+        var saveFile: File? = null
+        Log.e("saveFile===+>", "$downloadUrl")
         Thread {
             // 流和链接
             var inputStream: InputStream? = null
@@ -85,11 +85,11 @@ object FileUtils {
                 //储存文件
                 saveFile =
                     File("${getDir(context)}${File.separator}${downloadUrl.hashCode()}${connection?.fileExt()}")
-                Log.e("saveFile===+>","$saveFile")
+                Log.e("saveFile===+>", "$saveFile")
                 //如果文件已存在 不再下载 直接读取展示
                 if (saveFile!!.exists()) {
                     callback.onFinish(saveFile!!)
-                }else {
+                } else {
                     // 获取要下载的文件信息
                     fileTotalSize = connection?.contentLength!!       // 文件总大小
                     inputStream = connection.inputStream
@@ -107,7 +107,7 @@ object FileUtils {
                     callback.onFinish(saveFile!!)
                 }
             } catch (e: Exception) {
-                Log.e("download error","$e")
+                Log.e("download error", "$e")
                 if (saveFile?.exists() == true) {
                     if (saveFile!!.delete()) {
                         callback.onFail("下载失败$e")

@@ -1,6 +1,5 @@
 package com.gstory.file_preview.utils
 
-import android.text.TextUtils
 import android.util.Log
 import java.net.URLConnection
 
