@@ -21,13 +21,12 @@ class FilePreviewWidget extends StatefulWidget {
   /// [path] 文件地址 https\http开头、文件格式结尾的地址，或者本地绝对路径
   ///
   /// [controller] [FilePreviewController]控制器
-  FilePreviewWidget(
-      {Key? key,
-      required this.width,
-      required this.height,
-      required this.path,
-      this.controller,
-      this.callBack})
+  FilePreviewWidget({Key? key,
+    required this.width,
+    required this.height,
+    required this.path,
+    this.controller,
+    this.callBack})
       : super(key: key);
 
   @override
@@ -45,7 +44,54 @@ class FilePreviewWidgetState extends State<FilePreviewWidget> {
       return SizedBox(
         width: widget.width,
         height: widget.height,
-        child: AndroidView(
+        child:PlatformViewLink(
+          viewType: _viewType,
+          surfaceFactory: (context, controller) {
+            return AndroidViewSurface(
+              controller: controller as AndroidViewController,
+              gestureRecognizers: const <Factory<
+                  OneSequenceGestureRecognizer>>{},
+              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+            );
+          },
+          onCreatePlatformView: (params) {
+            // return PlatformViewsService.initExpensiveAndroidView(
+            //   id: params.id,
+            //   viewType: _viewType,
+            //   layoutDirection: TextDirection.ltr,
+            //   creationParams: {
+            //     "width": widget.width,
+            //     "height": widget.height,
+            //     "path": widget.path,
+            //   },
+            //   creationParamsCodec: const StandardMessageCodec(),
+            //   onFocus: () {
+            //     params.onFocusChanged(true);
+            //   },
+            // )
+            return PlatformViewsService.initSurfaceAndroidView(
+              id: params.id,
+              viewType: _viewType,
+              layoutDirection: TextDirection.ltr,
+              creationParams: {
+                "width": widget.width,
+                "height": widget.height,
+                "path": widget.path,
+              },
+              creationParamsCodec: const StandardMessageCodec(),
+              onFocus: () {
+                params.onFocusChanged(true);
+              },
+            )
+              ..addOnPlatformViewCreatedListener((id) {
+                _registerChannel(id);
+              })..addOnPlatformViewCreatedListener(
+                  params.onPlatformViewCreated)
+              ..create();
+          },
+        )
+
+        /* AndroidView(
           viewType: _viewType,
           creationParams: {
             "width": widget.width,
@@ -54,7 +100,9 @@ class FilePreviewWidgetState extends State<FilePreviewWidget> {
           },
           onPlatformViewCreated: _registerChannel,
           creationParamsCodec: const StandardMessageCodec(),
-        ),
+        )*/
+
+        ,
       );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       return SizedBox(

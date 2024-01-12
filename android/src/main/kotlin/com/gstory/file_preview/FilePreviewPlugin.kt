@@ -1,6 +1,5 @@
 package com.gstory.file_preview
 
-import android.app.Activity
 import android.content.Context
 import android.util.Log
 import androidx.annotation.NonNull
@@ -17,60 +16,78 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 /** FilePreviewPlugin */
 class FilePreviewPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
-    private var applicationContext: Context? = null
-    private var mActivity: Activity? = null
+    private lateinit var applicationContext: Context
     private lateinit var channel: MethodChannel
-    private var mFlutterPluginBinding: FlutterPlugin.FlutterPluginBinding? = null
+    private lateinit var mFlutterPluginBinding: FlutterPlugin.FlutterPluginBinding
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        mActivity = binding.activity
-        mFlutterPluginBinding?.platformViewRegistry?.registerViewFactory(
-            "com.gstory.file_preview/filePreview",
-            FilePreviewFactory(mFlutterPluginBinding?.binaryMessenger!!, mActivity!!)
-        )
-
+        if(::mFlutterPluginBinding.isInitialized){
+            mFlutterPluginBinding.platformViewRegistry.registerViewFactory(
+                "com.gstory.file_preview/filePreview",
+                FilePreviewFactory(mFlutterPluginBinding.binaryMessenger, binding.activity)
+            )
+        }
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        mActivity = binding.activity
-//        Log.e("FlutterUnionadPlugin->","onReattachedToActivityForConfigChanges")
+        onAttachedToActivity(binding)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-        mActivity = null
-//        Log.e("FlutterUnionadPlugin->","onDetachedFromActivityForConfigChanges")
+        onDetachedFromActivity()
     }
 
     override fun onDetachedFromActivity() {
-        mActivity = null
-//        Log.e("FlutterUnionadPlugin->","onDetachedFromActivity")
     }
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "file_preview")
         channel.setMethodCallHandler(this)
+
         applicationContext = flutterPluginBinding.applicationContext
         mFlutterPluginBinding = flutterPluginBinding
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: MethodChannel.Result) {
-        if (call.method == "initTBS") {
-            val license = call.argument<String>("license")
-            TbsFileInterfaceImpl.setLicenseKey(license)
-            TbsFileInterfaceImpl.fileEnginePreCheck(mActivity)
-            var isInit = TbsFileInterfaceImpl.initEngine(applicationContext)
-            Log.d("=====>", "初始化 $isInit")
-            result.success(isInit == 0)
-        } else if (call.method == "tbsHasInit") {
-            val ret = TbsFileInterfaceImpl.initEngine(applicationContext)
-            result.success(ret == 0)
-        } else if (call.method == "tbsVersion") {
-            result.success(TbsFileInterfaceImpl.getVersionName())
-        } else if (call.method == "deleteCache") {
-            FileUtils.deleteCache(mActivity!!, FileUtils.getDir(mActivity!!))
-            result.success(true)
-        } else {
+        when (call.method) {
+            "initTBS" -> {
+                if (::applicationContext.isInitialized) {
+                    val license = call.argument<String>("license")
+                    TbsFileInterfaceImpl.setLicenseKey(license)
+                    TbsFileInterfaceImpl.fileEnginePreCheck(applicationContext)
+                    val isInit = TbsFileInterfaceImpl.initEngine(applicationContext)
+                    Log.d("=====>", "初始化 $isInit")
+                    result.success(isInit == 0)
+                } else {
+                    result.error("1001", "上下文未初始化", "")
+                }
+            }
 
+            "tbsHasInit" -> {
+                if (::applicationContext.isInitialized) {
+                    val ret = TbsFileInterfaceImpl.initEngine(applicationContext)
+                    result.success(ret == 0)
+                } else {
+                    result.success(false)
+                }
+            }
+
+            "tbsVersion" -> {
+                result.success(TbsFileInterfaceImpl.getVersionName())
+            }
+
+            "deleteCache" -> {
+                if (::applicationContext.isInitialized) {
+                    FileUtils.deleteCache(applicationContext, FileUtils.getDir(applicationContext))
+                    result.success(true)
+                } else {
+                    result.success(false)
+                }
+            }
+
+            else -> {
+                result.notImplemented()
+            }
         }
     }
 

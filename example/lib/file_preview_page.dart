@@ -54,15 +54,15 @@ class _FilePreviewPageState extends State<FilePreviewPage> {
               ),
               TextButton(
                 onPressed: () {
-                  controller.showFile("https://gstory.vercel.app/ceshi/ceshi.pdf");
+                  controller.showFile("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
                 },
                 child: Text("pdf"),
               ),
               TextButton(
                 onPressed: () {
-                  controller.showFile("https://gstory.vercel.app/ceshi/ceshi.xisx");
+                  controller.showFile("https://file-examples.com/wp-content/storage/2017/02/file_example_XLS_5000.xls");
                 },
-                child: Text("xisx"),
+                child: Text("xls"),
               ),
               TextButton(
                 onPressed: () {

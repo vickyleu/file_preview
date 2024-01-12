@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:file_preview/file_preview.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(MyApp());
@@ -37,7 +38,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _initTBS() async {
-    isInit = await FilePreview.initTBS(license: "your license");
+    isInit = await FilePreview.initTBS(license: "k4cTqn77cUXT651BKxVwps/0/UQ0NhXs7R2RaEuf9/HOFOmfLb9QzblVmbbfca9V");
     version = await FilePreview.tbsVersion();
     if (mounted) {
       setState(() {});
@@ -70,13 +71,28 @@ class _HomePageState extends State<HomePage> {
               textColor: Colors.white,
               child: const Text('在线预览'),
               onPressed: () async {
+                //判断是否大于api32
+                if (Platform.isAndroid) {
+                  if (int.parse(Platform.version.split(".")[0]) >= 32) {
+                    PermissionStatus status = await Permission.manageExternalStorage.status;
+                    if (status.isDenied) {
+                      await Permission.manageExternalStorage.request();
+                    }
+                  }else{
+                    PermissionStatus status = await Permission.storage.status;
+                    if (status.isDenied) {
+                      await Permission.storage.request();
+                    }
+                  }
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) {
                       return const FilePreviewPage(
-                        title: "docx预览",
-                        path: "https://gstory.vercel.app/ceshi/ceshi.docx",
+                        title: "pdf预览",
+                        path: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
                       );
                     },
                   ),
